@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { Client, IntentsBitField, ActivityType, userMention} = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioResource, AudioPlayerStatus } = require('@discordjs/voice')
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice')
 const ytdl = require('ytdl-core');
 const bot = new Client({
     intents: [
@@ -16,8 +16,10 @@ const bot = new Client({
 bot.login(process.env.TOKEN);
 var queue;
 var index;
-var isPlaying;
+var idle;
+var songName;
 const player = createAudioPlayer();
+var voiceConnection = null;
 bot.on('ready', (c) => {
     console.log('REM ACTIVATED')
         bot.user.setPresence({ activities: [{ name: 'Designed and coded by @Katarem on GitHub' }], status: 'dnd' });
@@ -51,20 +53,22 @@ bot.on('interactionCreate', (interaction) => {
         const url = interaction.options.getString('url');
         if(isPlaying){
             const stream = ytdl(url, {filter: 'audioonly'});
+            songName = getSongName(url);
             const res = createAudioResource(stream);
             queue.push(res);
             interaction.reply('Added to the queue');
         }
         else{
-            const voiceConnection = joinVoiceChannel({
+            voiceConnection = joinVoiceChannel({
                 channelId: interaction.member.voice.channel.id,
                 guildId: interaction.guildId,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
             })
             const stream = ytdl(url, {filter: 'audioonly'});
+            songName = getSongName(url);
             const res = createAudioResource(stream);
             queue.push(res);
-            interaction.reply('Now playing song number ' + (index+1));
+            interaction.reply('Now playing: ' + songName);
             player.play(queue[index]);
             voiceConnection.subscribe(player);
         }    
@@ -73,13 +77,7 @@ bot.on('interactionCreate', (interaction) => {
             console.error('error: ' + error);
         })
 
-        // player.on(AudioPlayerStatus.Idle, () => {
-        //     voiceConnection.destroy();
-        //     index = 0;
-        //     isPlaying = false;
-        // })
-
-        player.on(AudioPlayerStatus.AutoPaused, () => {
+        player.on(AudioPlayerStatus.Idle, () => {
             skip();
         })
 
@@ -96,6 +94,8 @@ bot.on('interactionCreate', (interaction) => {
         interaction.reply('Player exiting');
         index = 0;
         player.stop();
+        if(voiceConnection != null)
+            voiceConnection.destroy();
     }
     if(interaction.commandName === 'resume'){
         interaction.reply('Resuming player');
@@ -105,26 +105,18 @@ bot.on('interactionCreate', (interaction) => {
         interaction.reply('Skipping song');
         skip();
     }
-    if(interaction.commandName === 'debug_check'){
-        interaction.reply(player.state);
+
+    function skip(){
+        if(index+1<queue.length){
+            index++;
+            interaction.channel.send('Now playing: ' + songName)
+            player.play(queue[index]);
+            idle = false;
+        }
     }
 
+    async function getSongName(url) {
+        return (await ytdl.getInfo(url)).videoDetails.title;
+    }
 })
 
-function checkIfLastSong(index) {
-    if(index == queue.length-1){
-        return true;
-    }
-    else
-        return false;
-}
-
-function skip(){
-    if(index+1<queue.length){
-        index++;
-        player.play(queue[index]);
-    }
-    else{
-        voiceConnection.destroy();
-    }
-}
