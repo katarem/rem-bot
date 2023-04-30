@@ -40,6 +40,21 @@ bot.on('messageCreate', (message) => {
 bot.on('interactionCreate', (interaction) => {
     if(!interaction.isChatInputCommand()) return;
 
+    if(interaction.commandName === 'help'){
+        interaction.reply('These are all the commands I have:\n'
+        + '/hello   I will say you hello back\n'
+        + '/help    Displays this help\n'
+        + '/camellos    I calculate how many camels do you cost\n'
+        + "/dados   I will throw you the dice amount with the size you want, if you don't give any argument, I'll throw 1 six-sided dice."
+        + "/play    Plays one song you want to search on YouTube, you can use YouTube video url's and playlists too. If a song is already playing, it will be added to the queue"
+        + "/resume  Will unpause the player"
+        + "/pause Will pause the plaer"
+        + "/skip    Will skip the current song to the next one"
+        + "/stop    Will stop the music and I'll exit the voice channel"
+        + "/clear   Will clear the music queue")
+    }
+
+
     if(interaction.commandName === 'hello'){
         interaction.reply('hey');
     }
@@ -50,10 +65,26 @@ bot.on('interactionCreate', (interaction) => {
         interaction.reply(userMention(usr.id) + ' vale ' + number + ' camellos.');
     }
 
+    if(interaction.commandName === 'dados'){
+        const numDados = interaction.options.getInteger('dados');
+        const numCaras = interaction.options.getInteger('caras');
+
+        if(numDados === undefined)
+            numDados = 1;
+        if(numCaras === undefined)
+            numCaras = 6;
+
+        var numeroTotal = 0;
+        for (let i = 0; i < numDados; i++) {
+            numeroTotal += Math.floor(Math.random() * numCaras +1);
+        }
+        interaction.reply(":control_knobs: " + userMention(interaction.user.id) + " ha sacado " + numeroTotal + " de " + numDados + " dados de " + numCaras + " caras!")
+    }
+
     if(interaction.commandName === 'play'){
         const url = interaction.options.getString('url');
         
-            interaction.reply('received');
+            interaction.reply(':white_check_mark: Command received!');
             voiceConnection = joinVoiceChannel({
                 channelId: interaction.member.voice.channel.id,
                 guildId: interaction.guildId,
@@ -65,7 +96,7 @@ bot.on('interactionCreate', (interaction) => {
             checkType(url);
         
         player.on('error', (error) => {
-            console.error('error: ' + error.stack);
+            interaction.channel.send(':no_entry_sign: An error has ocurred.')
         })
 
         player.on(AudioPlayerStatus.Idle, () => {
@@ -78,35 +109,40 @@ bot.on('interactionCreate', (interaction) => {
 
     }
     if(interaction.commandName === 'pause'){
-        interaction.reply('Paused player');
+        interaction.reply(':pause_button:  Paused player');
         player.pause();
     }
     if(interaction.commandName === 'stop'){
-        interaction.reply('Player exiting');
+        interaction.reply(':stop_button:  Player exiting');
         index = 0;
         player.stop();
         if(voiceConnection != null)
             voiceConnection.destroy();
     }
     if(interaction.commandName === 'resume'){
-        interaction.reply('Resuming player');
+        interaction.reply(':arrow_forward:  Resuming player');
         player.unpause();
     }
     if(interaction.commandName === 'skip'){
-        interaction.reply('Skipping song');
+        interaction.reply(':fast_forward:  Skipping song');
         skip();
     }
 
     if(interaction.commandName === 'clear'){
-        interaction.reply('Cleared queue');
+        interaction.reply(':broom:  Cleared queue');
         clear();
     }
 
     function skip(){
         if(index+1<queue.length){
             index++;
+            displaySong(queue[index].title);
             player.play(queue[index].res);
         }
+    }
+
+    function displaySong(songName){
+        interaction.channel.send(':musical_note:  Now playing: ' + songName);
     }
 
     function clear(){
@@ -119,6 +155,7 @@ bot.on('interactionCreate', (interaction) => {
         const data = await playdl.validate(url);
         switch (data) {
             case 'yt_playlist':
+                interaction.channel.send(':inbox_tray:  Adding playlist...')
                 preparePlaylist(url);
                 break;
             case 'yt_video':
@@ -126,6 +163,7 @@ bot.on('interactionCreate', (interaction) => {
                 prepareSong(stream);
                 break;
             default:
+                interaction.channel.send(':mag:  Searching song...')
                 const yt_info = await playdl.search(url, {
                     limit: 1
                 })
@@ -149,14 +187,14 @@ bot.on('interactionCreate', (interaction) => {
             title,
             res
         }
-        if(player.state.status === 'playing'){           
+        if(queue.length >= 1 && player.state.status === 'playing'){           
             queue.push(song);
-            interaction.channel.send(' Added to the queue: ' + song.title);           
+            interaction.channel.send(':notes:  Added to the queue: ' + song.title);           
         }
         else{
             queue.push(song);
             player.play(queue[index].res);
-            interaction.channel.send(' Now playing: ' + song.title);
+            interaction.channel.send(':musical_note:  Now playing: ' + song.title);
         }      
     }
 

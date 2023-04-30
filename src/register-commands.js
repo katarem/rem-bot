@@ -5,6 +5,10 @@ const { REST, Routes, Options, VoiceChannel, SlashCommandBuilder, ChannelType } 
 const commands = [
 
     {
+        name: 'help',
+        description: 'Shows all commands that RemBot can do'
+    },
+    {
         name: 'hello',
         description: 'Replies with hey',
     },
@@ -13,9 +17,15 @@ const commands = [
         description: 'Rem calculates how many camels you cost'
     },
     new SlashCommandBuilder()
+        .setName('dados')
+        .setDescription('Rem tira los dados de las caras que quieras por ti')
+        .addIntegerOption((option) => option.setName('dados').setDescription('Número de dados a tirar'))
+        .addIntegerOption((option) => option.setName('caras').setDescription('Número de lados de cada dado'))
+        .toJSON(),
+    new SlashCommandBuilder()
         .setName('play')
         .setDescription('Plays a song.')
-        .addStringOption((option) => option.setName('url').setDescription('youtube url of the song'))
+        .addStringOption((option) => option.setName('url').setDescription('Search in Youtube, or Video/Playlist URL').setRequired(true))
         .toJSON(),
     {
         name: 'pause',
