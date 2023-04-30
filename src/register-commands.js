@@ -26,16 +26,16 @@ const commands = [
         description: 'Resumes the music'
     },
     {
-        name: 'debug_check',
-        description: 'DEBUG ONLY'
-    },
-    {
         name: 'skip',
         description: 'Skips the current song'
     },
     {
         name: 'stop',
         description: 'Stops the music (bot will exit)'
+    },
+    {
+        name: 'clear',
+        description: 'Clears the queue'
     }
 ];
 const rest = new REST({version: '10'}).setToken(process.env.TOKEN);

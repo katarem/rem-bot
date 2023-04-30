@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const { Client, IntentsBitField, ActivityType, userMention} = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice')
-const ytdl = require('ytdl-core');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioResource, AudioPlayerStatus } = require('@discordjs/voice')
+const playdl = require('play-dl');
 const bot = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -16,8 +16,6 @@ const bot = new Client({
 bot.login(process.env.TOKEN);
 var queue;
 var index;
-var idle;
-var songName;
 const player = createAudioPlayer();
 var voiceConnection = null;
 bot.on('ready', (c) => {
@@ -31,16 +29,19 @@ bot.on('ready', (c) => {
 bot.on('messageCreate', (message) => {
     if(message.author.bot)
         return;
-    if(message.content === 'hey')
-        message.reply('hey');
+    if(message.content.toLowerCase() === 'hola rem'){
+        message.reply('Hola ' + userMention(message.author.id));
+    }
+    if(message.content.toLowerCase() === 'que'){
+        message.reply('so');
+    }
+
 })
 bot.on('interactionCreate', (interaction) => {
     if(!interaction.isChatInputCommand()) return;
 
     if(interaction.commandName === 'hello'){
-        async () => {
-            interaction.reply('hey');
-        } 
+        interaction.reply('hey');
     }
 
     if(interaction.commandName === 'camellos'){
@@ -51,30 +52,20 @@ bot.on('interactionCreate', (interaction) => {
 
     if(interaction.commandName === 'play'){
         const url = interaction.options.getString('url');
-        if(isPlaying){
-            const stream = ytdl(url, {filter: 'audioonly'});
-            songName = getSongName(url);
-            const res = createAudioResource(stream);
-            queue.push(res);
-            interaction.reply('Added to the queue');
-        }
-        else{
+        
+            interaction.reply('received');
             voiceConnection = joinVoiceChannel({
                 channelId: interaction.member.voice.channel.id,
                 guildId: interaction.guildId,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
             })
-            const stream = ytdl(url, {filter: 'audioonly'});
-            songName = getSongName(url);
-            const res = createAudioResource(stream);
-            queue.push(res);
-            interaction.reply('Now playing: ' + songName);
-            player.play(queue[index]);
+
             voiceConnection.subscribe(player);
-        }    
+            
+            checkType(url);
         
         player.on('error', (error) => {
-            console.error('error: ' + error);
+            console.error('error: ' + error.stack);
         })
 
         player.on(AudioPlayerStatus.Idle, () => {
@@ -106,17 +97,76 @@ bot.on('interactionCreate', (interaction) => {
         skip();
     }
 
+    if(interaction.commandName === 'clear'){
+        interaction.reply('Cleared queue');
+        clear();
+    }
+
     function skip(){
         if(index+1<queue.length){
             index++;
-            interaction.channel.send('Now playing: ' + songName)
-            player.play(queue[index]);
-            idle = false;
+            player.play(queue[index].res);
         }
     }
 
-    async function getSongName(url) {
-        return (await ytdl.getInfo(url)).videoDetails.title;
+    function clear(){
+        queue.length = 0;
+        index = 0;
     }
-})
+
+    async function checkType(url){
+        var stream;
+        const data = await playdl.validate(url);
+        switch (data) {
+            case 'yt_playlist':
+                preparePlaylist(url);
+                break;
+            case 'yt_video':
+                stream = await playdl.stream(url);
+                prepareSong(stream);
+                break;
+            default:
+                const yt_info = await playdl.search(url, {
+                    limit: 1
+                })
+                stream = await playdl.stream(yt_info[0].url);
+                prepareSong(stream, yt_info[0].url);
+                break;
+        }
+    }
+
+
+    async function prepareSong(stream, url){
+        const res = createAudioResource(stream.stream,{
+            inputType: stream.type
+        });
+        var title;
+        if(url === undefined)
+            title = (await playdl.video_basic_info(stream.url)).video_details.title;
+        else
+            title = (await playdl.video_basic_info(url)).video_details.title;
+        const song = {
+            title,
+            res
+        }
+        if(player.state.status === 'playing'){           
+            queue.push(song);
+            interaction.channel.send(' Added to the queue: ' + song.title);           
+        }
+        else{
+            queue.push(song);
+            player.play(queue[index].res);
+            interaction.channel.send(' Now playing: ' + song.title);
+        }      
+    }
+
+    async function preparePlaylist(url){
+        const playlist = (await playdl.playlist_info(url)).all_videos();
+        (await playlist).forEach(async video => {
+                stream = await playdl.stream(video.url);
+                await prepareSong(stream, stream.video_url);
+            });   
+        }
+
+});
 
