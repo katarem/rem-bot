@@ -1,0 +1,1 @@
+{"version":3,"file":"song.js","sourceRoot":"","sources":["../../src/objs/song.ts"],"names":[],"mappings":";;AAAA,MAAM,IAAI;IAKN,YAAmB,KAAa,EAAE,GAAW;QACzC,IAAI,CAAC,KAAK,GAAG,KAAK,CAAC;QACnB,IAAI,CAAC,GAAG,GAAG,GAAG,CAAC;IACnB,CAAC;CAGJ;AAED,kBAAe,IAAI,CAAC"}

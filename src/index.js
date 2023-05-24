@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const {
   Client,
+  EmbedBuilder,
   IntentsBitField,
   ActivityType,
   userMention,
@@ -26,19 +27,20 @@ const bot = new Client({
 });
 
 bot.login(process.env.TOKEN);
-var queue;
+var skipped = false;
+var queue = [];
 var index;
 const player = createAudioPlayer();
 var voiceConnection = null;
 bot.on("ready", (c) => {
   console.log("REM ACTIVATED");
+  queue = [];
+  index = 0;
+  isPlaying = false;
   bot.user.setPresence({
     activities: [{ name: "Designed and coded by @Katarem on GitHub" }],
     status: "dnd",
   });
-  queue = [];
-  index = 0;
-  isPlaying = false;
 });
 
 bot.on("messageCreate", (message) => {
@@ -48,6 +50,13 @@ bot.on("messageCreate", (message) => {
   }
   if (message.content.toLowerCase() === "que") {
     message.reply("so");
+  }
+  if (message.content.toLowerCase() === "testembed") {
+    const embed = new EmbedBuilder()
+      .setColor("DarkRed")
+      .setTitle("Song name")
+      .setDescription("the song is playing");
+    message.channel.send({ embeds: [embed] });
   }
 });
 bot.on("interactionCreate", (interaction) => {
@@ -88,8 +97,8 @@ bot.on("interactionCreate", (interaction) => {
     const numDados = interaction.options.getInteger("dados");
     const numCaras = interaction.options.getInteger("caras");
 
-    if (numDados === nul) numDados = 1;
-    if (numCaras === undefined) numCaras = 6;
+    if (numDados === null) numDados = 1;
+    if (numCaras === null) numCaras = 6;
 
     var numeroTotal = 0;
     for (let i = 0; i < numDados; i++) {
@@ -128,14 +137,16 @@ bot.on("interactionCreate", (interaction) => {
     });
 
     player.on(AudioPlayerStatus.Idle, () => {
-      skip();
+      if (!skip()) {
+        index = 0;
+        queue = [];
+        player.stop();
+        if (voiceConnection != null) voiceConnection.destroy();
+      }
     });
 
-    // player.on(AudioPlayerStatus.AutoPaused, () => {
-    //   skip();
-    // });
-
     player.on(AudioPlayerStatus.Playing, () => {
+      skipped = false;
       isPlaying = true;
     });
   }
@@ -146,6 +157,7 @@ bot.on("interactionCreate", (interaction) => {
   if (interaction.commandName === "stop") {
     interaction.reply(":stop_button:  Player exiting");
     index = 0;
+    queue = [];
     player.stop();
     if (voiceConnection != null) voiceConnection.destroy();
   }
@@ -164,10 +176,13 @@ bot.on("interactionCreate", (interaction) => {
   }
 
   function skip() {
-    if (index + 1 < queue.length) {
+    if (index < queue.length - 1) {
       index++;
       displaySong(queue[index].title);
       player.play(queue[index].res);
+      return true;
+    } else {
+      return false;
     }
   }
 

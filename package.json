@@ -1,8 +1,8 @@
 {
   "name": "rem-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/index.js",
+  "description": "discord bot",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,5 +18,8 @@
     "libsodium-wrappers": "^0.7.11",
     "opusscript": "^0.0.8",
     "play-dl": "^1.9.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
   }
 }
