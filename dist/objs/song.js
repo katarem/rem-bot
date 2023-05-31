@@ -2,8 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Song {
     constructor(title, res) {
-        this.title = title;
+        if (title != undefined)
+            this.title = title;
         this.res = res;
+    }
+    getTitle() {
+        return this.title;
+    }
+    getRes() {
+        return this.res;
     }
 }
 exports.default = Song;

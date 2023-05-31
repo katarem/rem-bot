@@ -23,6 +23,10 @@ const commands = [
     description: "Rem calculates how many camels you cost",
   },
   {
+    name: "list",
+    description: "Displays all songs of the current playlist",
+  },
+  {
     name: "flip",
     description: "Flips a coin",
   },
