@@ -26,6 +26,7 @@ const bot = new discord_js_1.Client({
     ]
 });
 bot.login(process.env.TOKEN);
+console.log(__dirname);
 var skipped = false;
 var queue;
 var index;
@@ -53,7 +54,7 @@ bot.on("messageCreate", (message) => {
     if (message.content.toLowerCase() === "que") {
         message.reply("so");
     }
-    if (message.content.toLowerCase()) {
+    if (message.content.toLowerCase() === "") {
         const embed = new discord_js_1.EmbedBuilder()
             .setColor("DarkRed")
             .setTitle("Song name")
@@ -122,10 +123,10 @@ bot.on("interactionCreate", (interaction) => {
             console.log(error.name);
         });
         player.on(voice_1.AudioPlayerStatus.Idle, () => {
-            console.log("idle");
+            console.log(player.state.status);
             if (index + 1 === queue.length) {
                 index = 0;
-                queue = new Array;
+                queue = new Array();
                 skipped = false;
                 player.stop();
                 if (voiceConnection != null)
@@ -158,7 +159,7 @@ bot.on("interactionCreate", (interaction) => {
     if (interaction.commandName === "stop") {
         interaction.reply(":stop_button:  Player exiting");
         index = 0;
-        queue = new Array;
+        queue = new Array();
         skipped = false;
         player.stop();
         if (voiceConnection != null)

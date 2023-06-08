@@ -16,6 +16,8 @@ const bot = new Client({
 
 bot.login(process.env.TOKEN);
 
+console.log(__dirname)
+
 var skipped: boolean = false;
 var queue:Array<Song>;
 var index: number;
@@ -124,10 +126,10 @@ bot.on("interactionCreate", (interaction) => {
         });
 
         player.on(AudioPlayerStatus.Idle, () => {
-          console.log("idle");
+          console.log(player.state.status);
           if (index+1 === queue.length) {
             index = 0;
-            queue = new Array<Song>;
+            queue = new Array<Song>();
             skipped = false;
             player.stop();
             if (voiceConnection != null) voiceConnection.disconnect();
@@ -161,7 +163,7 @@ bot.on("interactionCreate", (interaction) => {
       if (interaction.commandName === "stop") {
         interaction.reply(":stop_button:  Player exiting");
         index = 0;
-        queue = new Array<Song>;
+        queue = new Array<Song>();
         skipped = false;
         player.stop();
         if (voiceConnection != null) voiceConnection.disconnect();
