@@ -16,7 +16,6 @@ const bot = new Client({
 
 bot.login(process.env.TOKEN);
 
-console.log(__dirname)
 
 var skipped: boolean = false;
 var queue:Array<Song>;
@@ -25,7 +24,7 @@ const player = createAudioPlayer();
 var voiceConnection: VoiceConnection;
 
 bot.on("ready", (c) => {
-    console.log("REM ACTIVATED TS VERSION");
+    console.log("Preparada para el combate");
     queue = new Array<Song>();
     index = 0;
     bot.user?.setPresence({
@@ -126,7 +125,6 @@ bot.on("interactionCreate", (interaction) => {
         });
 
         player.on(AudioPlayerStatus.Idle, () => {
-          console.log(player.state.status);
           if (index+1 === queue.length) {
             index = 0;
             queue = new Array<Song>();
@@ -141,7 +139,6 @@ bot.on("interactionCreate", (interaction) => {
         });
     
         player.on(AudioPlayerStatus.Playing, () => {
-          console.log("playing");
           skipped = false;
         });
       }
@@ -185,7 +182,6 @@ bot.on("interactionCreate", (interaction) => {
       function skip() {
         if (index < queue.length - 1) {
           index++;
-          console.log("reproduciendo " + index);
           displaySong(queue[index].getTitle());
           player.play(queue[index].getRes());
         } 
@@ -235,14 +231,9 @@ bot.on("interactionCreate", (interaction) => {
         });
         const title: string | undefined = (await playdl.video_basic_info(url)).video_details.title;
         const song = new Song(title,res);
-        if (queue.length >= 1 && player.state.status === "playing") {
+        if (player.state.status === "playing") {
           queue.push(song);
           interaction.channel!.send(":notes:  Added to the queue: " + song.getTitle());
-        } else if (queue.length >= 1) {
-          queue.push(song);
-          index++;
-          player.play(queue[index].getRes());
-          interaction.channel!.send(":musical_note:  Now playing: " + song.getTitle());
         } else {
           queue.push(song);
           player.play(queue[index].getRes());

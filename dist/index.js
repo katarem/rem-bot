@@ -26,7 +26,6 @@ const bot = new discord_js_1.Client({
     ]
 });
 bot.login(process.env.TOKEN);
-console.log(__dirname);
 var skipped = false;
 var queue;
 var index;
@@ -34,7 +33,7 @@ const player = (0, voice_1.createAudioPlayer)();
 var voiceConnection;
 bot.on("ready", (c) => {
     var _a;
-    console.log("REM ACTIVATED TS VERSION");
+    console.log("Preparada para el combate");
     queue = new Array();
     index = 0;
     (_a = bot.user) === null || _a === void 0 ? void 0 : _a.setPresence({
@@ -123,7 +122,6 @@ bot.on("interactionCreate", (interaction) => {
             console.log(error.name);
         });
         player.on(voice_1.AudioPlayerStatus.Idle, () => {
-            console.log(player.state.status);
             if (index + 1 === queue.length) {
                 index = 0;
                 queue = new Array();
@@ -138,7 +136,6 @@ bot.on("interactionCreate", (interaction) => {
             }
         });
         player.on(voice_1.AudioPlayerStatus.Playing, () => {
-            console.log("playing");
             skipped = false;
         });
     }
@@ -180,7 +177,6 @@ bot.on("interactionCreate", (interaction) => {
     function skip() {
         if (index < queue.length - 1) {
             index++;
-            console.log("reproduciendo " + index);
             displaySong(queue[index].getTitle());
             player.play(queue[index].getRes());
         }
@@ -230,15 +226,9 @@ bot.on("interactionCreate", (interaction) => {
             });
             const title = (yield play_dl_1.default.video_basic_info(url)).video_details.title;
             const song = new song_1.default(title, res);
-            if (queue.length >= 1 && player.state.status === "playing") {
+            if (player.state.status === "playing") {
                 queue.push(song);
                 interaction.channel.send(":notes:  Added to the queue: " + song.getTitle());
-            }
-            else if (queue.length >= 1) {
-                queue.push(song);
-                index++;
-                player.play(queue[index].getRes());
-                interaction.channel.send(":musical_note:  Now playing: " + song.getTitle());
             }
             else {
                 queue.push(song);
