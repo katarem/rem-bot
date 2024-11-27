@@ -1,5 +1,6 @@
 import { AudioPlayer, AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, getVoiceConnection, joinVoiceChannel, NoSubscriberBehavior, VoiceConnection } from "@discordjs/voice";
 import { Song } from "./Song";
+import { TextBasedChannel } from "discord.js";
 
 export class SongPlayer{
 
@@ -7,13 +8,15 @@ export class SongPlayer{
     private isPlaying: boolean = false;
     private player: AudioPlayer;
     private queue: Song[] = [];
+    private channel: TextBasedChannel;
 
-    constructor(){
+    constructor(channel: TextBasedChannel){
         this.player = createAudioPlayer({
             behaviors: {
                 noSubscriber: NoSubscriberBehavior.Pause
             }
         });
+        this.channel = channel;
     }
 
     addSong(song: Song){
@@ -24,14 +27,21 @@ export class SongPlayer{
     }
 
     skip(){
-        this.index++;
-        this.play(this.queue[this.index]);
+        if(this.index < this.queue.length - 1){
+            this.index++;
+            this.play(this.queue[this.index]);
+        } else {
+            this.isPlaying = false;
+        }
     }
 
     play(song: Song){
+        this.isPlaying = true;
         this.player.play(this.prepareSong(song));
-        this.player.on(AudioPlayerStatus.Idle, () => {
-            this.skip();
+        this.channel?.send(`Ahora reproduciendo: ${song.title}`);
+        this.player.on(AudioPlayerStatus.Idle, (oldState) => {
+            if(oldState.status === AudioPlayerStatus.Playing)
+                this.skip();
         });
     }
 
@@ -42,6 +52,11 @@ export class SongPlayer{
                 title: song.title,
             }
         });
+    }
+
+    pause(){
+        this.player.pause();
+        this.isPlaying = false;
     }
 
     stop(){

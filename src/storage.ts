@@ -1,6 +1,5 @@
-import { getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import { SongPlayer } from "./player/SongPlayer";
-import { ChatInputCommandInteraction, TextBasedChannel } from "discord.js";
+import { TextBasedChannel } from "discord.js";
 
 export class Storage {
 
@@ -12,13 +11,13 @@ export class Storage {
         return Storage.instance;
     }
 
-    private addServer(id: string){
-        this.activePlayers.set(id, new SongPlayer());
+    private addServer(id: string, textChannel: TextBasedChannel){
+        this.activePlayers.set(id, new SongPlayer(textChannel));
     }
 
-    getPlayer(id: string): SongPlayer | undefined {
+    getPlayer(id: string, textChannel: TextBasedChannel): SongPlayer | undefined {
         const existingPlayer = this.activePlayers.get(id);
-        if(!existingPlayer && id.length > 0){ this.addServer(id); }
+        if(!existingPlayer && id.length > 0){ this.addServer(id, textChannel); }
         return this.activePlayers.get(id);
     }
 

@@ -20,7 +20,7 @@ class DatabaseService {
     private static instance: DatabaseService;
 
     private constructor(){
-        this.db = new Database(config.DB_PATH, err => console.error(err));
+        this.db = new Database(config.DB_PATH);
         const databaseExists = fs.existsSync(config.DB_PATH);
         if(!databaseExists) this.initializeDatabase();
         DatabaseService.instance = this;
