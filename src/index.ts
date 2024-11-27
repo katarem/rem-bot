@@ -1,8 +1,14 @@
-import { Client, IntentsBitField } from "discord.js";
+import { Client, IntentsBitField, userMention } from "discord.js";
 
-import { Configuration } from "../config/config";
+import { config } from "../config/config";
 import messageHandler from "./messageHandler";
 import interactionHandler from "./interactionHandler";
+import DatabaseService from "./database";
+import { commandDeploy } from "./commandDeploy";
+import prepareCommands from "./commands/commands";
+
+const service = DatabaseService.getInstance();
+const commands = prepareCommands();
 
 const bot = new Client({
     intents: [
@@ -13,15 +19,23 @@ const bot = new Client({
     ],
 });
 // conectamos con el token de la api de discordjs
-bot.login(Configuration.API_TOKEN);
+bot.login(config.API_TOKEN);
 
 //evento ready
-bot.on("ready", (message) => {
-    console.log("REM ACTIVA PAPI");
+bot.on("ready", async () => {
+    console.log("rem active for fighting");
     bot.user?.setPresence({
         activities: [{ name: "Designed and coded by @katarem on GitHub" }],
         status: 'dnd',
-    })
+    });
+
+    const guilds = await bot.guilds.fetch();
+    guilds.forEach(async (guild) => {
+        const existsAlready = await service.fetchGuild(guild.id);
+        if(existsAlready.length === 0)
+            service.saveGuild(guild);
+        await commandDeploy(commands, guild.id);
+    });
 });
 
 //cuando envian mensaje
@@ -36,4 +50,3 @@ bot.on("interactionCreate", (interaction) => {
     if(!interaction.isChatInputCommand()) return;
     interactionHandler(interaction);
 });
-
