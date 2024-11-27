@@ -32,7 +32,6 @@ export default async function interactionHandler(interaction: ChatInputCommandIn
             break;
         case "stop":
             storage.getPlayer(interaction.guildId!!, interaction.channel!!)?.stop();
-            getVoiceConnection(interaction.guildId!!)?.disconnect();
             interaction.reply("Adios!");
             break;
         case "pause":

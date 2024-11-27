@@ -12,7 +12,7 @@ export class Storage {
     }
 
     private addServer(id: string, textChannel: TextBasedChannel){
-        this.activePlayers.set(id, new SongPlayer(textChannel));
+        this.activePlayers.set(id, new SongPlayer(id, textChannel));
     }
 
     getPlayer(id: string, textChannel: TextBasedChannel): SongPlayer | undefined {

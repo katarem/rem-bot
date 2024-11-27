@@ -1,22 +1,28 @@
-import { AudioPlayer, AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, getVoiceConnection, joinVoiceChannel, NoSubscriberBehavior, VoiceConnection } from "@discordjs/voice";
+import { AudioPlayer, AudioPlayerStatus, AudioResource, createAudioPlayer, createAudioResource, getVoiceConnection, NoSubscriberBehavior } from "@discordjs/voice";
 import { Song } from "./Song";
 import { TextBasedChannel } from "discord.js";
 
 export class SongPlayer{
+
+    private TIME: number = 5 * 1000 * 60;
 
     private index: number = -1;
     private isPlaying: boolean = false;
     private player: AudioPlayer;
     private queue: Song[] = [];
     private channel: TextBasedChannel;
+    private guildId: string;
 
-    constructor(channel: TextBasedChannel){
+    private timeOut?: NodeJS.Timeout;
+
+    constructor(guildId: string, channel: TextBasedChannel){
         this.player = createAudioPlayer({
             behaviors: {
                 noSubscriber: NoSubscriberBehavior.Pause
             }
         });
         this.channel = channel;
+        this.guildId = guildId;
     }
 
     addSong(song: Song){
@@ -32,6 +38,9 @@ export class SongPlayer{
             this.play(this.queue[this.index]);
         } else {
             this.isPlaying = false;
+            this.timeOut = setTimeout(() => {
+                this.stop();
+            }, this.TIME);
         }
     }
 
@@ -42,6 +51,10 @@ export class SongPlayer{
         this.player.on(AudioPlayerStatus.Idle, (oldState) => {
             if(oldState.status === AudioPlayerStatus.Playing)
                 this.skip();
+        });
+        this.player.on(AudioPlayerStatus.Playing, () => {
+            clearTimeout(this.timeOut);
+            this.timeOut = undefined;
         });
     }
 
@@ -60,7 +73,8 @@ export class SongPlayer{
     }
 
     stop(){
-        this.player.pause();
+        this.player.stop();
+        this.disconnect();
         this.isPlaying = false;
     }
 
@@ -69,6 +83,9 @@ export class SongPlayer{
         this.isPlaying = true;
     }
 
+    disconnect(){
+        getVoiceConnection(this.guildId)?.disconnect();
+    }
 
     getPlayer(): AudioPlayer {
         return this.player;
