@@ -10,21 +10,22 @@
   "author": "katarem",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/voice": "^0.18.0",
-    "@tomhuel/jsonhandler": "^1.0.0",
-    "@types/node": "^20.11.16",
-    "discord.js": "^14.14.1",
-    "dotenv": "^16.4.1",
-    "env-var": "^7.4.1",
-    "ffmpeg-static": "^5.2.0",
-    "sqlite3": "^5.1.7",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "youtube-dl-exec": "^3.0.10"
+    "@discordjs/voice": "0.18.0",
+    "@tomhuel/jsonhandler": "1.0.0",
+    "@types/node": "20.11.16",
+    "discord.js": "14.14.1",
+    "dotenv": "16.4.1",
+    "env-var": "7.4.1",
+    "ffmpeg": "^0.0.4",
+    "libsodium-wrappers": "^0.7.15",
+    "sqlite3": "5.1.7",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3",
+    "youtube-dl-exec": "3.0.10"
   },
   "devDependencies": {
-    "@types/sqlite3": "^3.1.11",
-    "nodemon": "^3.0.3",
-    "ts-node-dev": "^2.0.0"
+    "@types/sqlite3": "3.1.11",
+    "nodemon": "3.0.3",
+    "ts-node-dev": "2.0.0"
   }
 }
