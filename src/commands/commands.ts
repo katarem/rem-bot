@@ -34,6 +34,16 @@ export default function prepareCommands(): RESTPostAPIChatInputApplicationComman
     .toJSON());
 
     commands.push(new SlashCommandBuilder()
+    .setName('queue')
+    .setDescription('displays the current queue')
+    .toJSON());
+
+    commands.push(new SlashCommandBuilder()
+    .setName('shuffle')
+    .setDescription('shuffle the current queue')
+    .toJSON());
+
+    commands.push(new SlashCommandBuilder()
     .setName('dados')
     .setDescription('rolls a dice')
     .addIntegerOption(option => option

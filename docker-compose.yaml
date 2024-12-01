@@ -1,0 +1,25 @@
+
+networks:
+  rem_bot_network:
+    driver: bridge
+
+services:
+  rem_bot:
+    container_name: rem_bot
+    build: 
+      context: .
+      dockerfile: .docker/Dockerfile
+      target: prod
+    volumes:
+      - ./data:/app/data
+    networks:
+      - rem_bot_network
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ./ollama-data:/root/.ollama
+      - ./.docker/entrypoint.sh:/entrypoint.sh
+    tty: true
+    networks:
+      - rem_bot_network
+    entrypoint: ["/usr/bin/bash","/entrypoint.sh"]

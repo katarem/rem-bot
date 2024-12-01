@@ -91,6 +91,26 @@ export class SongPlayer{
         return this.player;
     }
 
+    displayQueue(){
+        this.queue.forEach((song, index) => {
+            if(index === this.index)
+                this.channel.send(` -> ${index+1} ${song.title}`);
+            else    
+                this.channel.send(`${index+1} ${song.title}`);
+        });
+    }
+
+    shuffle(){
+        const currentSong = this.queue[this.index];
+        this.queue = this.queue.filter(song => song !== currentSong);
+        for (let i = this.queue.length - 1; i > 0; i--) { 
+            const j = Math.floor(Math.random() * (i + 1)); 
+            [this.queue[i], this.queue[j]] = [this.queue[j], this.queue[i]]; 
+        }
+        this.queue.unshift(currentSong);
+        this.index = 0;
+    }
+
 }
 
 

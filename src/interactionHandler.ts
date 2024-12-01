@@ -3,55 +3,76 @@ import { Storage } from "./storage";
 import { Song } from "./player/Song";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel, VoiceConnection } from "@discordjs/voice";
 import youtubeDl, { Payload } from "youtube-dl-exec";
+import { SongPlayer } from "./player/SongPlayer";
 
 const storage = Storage.getInstance();
 
 export default async function interactionHandler(interaction: ChatInputCommandInteraction) {
 
     if (!interaction.guildId) {
-        interaction.reply('Error desconocido');
+        interaction.reply('❗ Internal Error');
         console.error('[ERROR] NO_SERVER_ID');
         return;
     }
 
+    const player: SongPlayer | undefined = storage.getPlayer(interaction.guildId!!, interaction.channel!!);
+
     switch (interaction.commandName) {
         case "help":
-            interaction.reply("no necesitas ayuda, leete la puta docu");
+            interaction.reply("");
             break;
         case "play":
             playCommand(interaction);
             break;
         case "skip":
-            storage.getPlayer(interaction.guildId!!, interaction.channel!!)?.skip();
-            interaction.reply("skipped song! moving to the next one");
+            interaction.reply("⏩ Skipping song!");
+            player?.skip();
             break;
         case "dados":
-            let numeroDados: number | null = interaction.options.getInteger("dice_number", false);
-            let numeroCaras: number = interaction.options.getInteger("side_number", true);
-            interaction.reply(`ha salido ${tirarDados(numeroDados ?? 1, numeroCaras)}`);
+            let diceNumber: number | null = interaction.options.getInteger("dice_number", false);
+            let sideNumber: number = interaction.options.getInteger("side_number", true);
+            interaction.reply(`🎲 ${userMention(interaction.user.id)} obtained ${throwDice(diceNumber ?? 1, sideNumber)} in ${diceNumber} dice of ${sideNumber} sides.`);
             break;
         case "stop":
-            storage.getPlayer(interaction.guildId!!, interaction.channel!!)?.stop();
-            interaction.reply("Adios!");
+            player?.stop();
+            interaction.reply("👋 Bye!");
+            break;
+        case "queue":
+            player?.displayQueue();
+            interaction.reply('⛓️‍💥 Displaying Queue');
             break;
         case "pause":
-            storage.getPlayer(interaction.guildId!!, interaction.channel!!)?.pause();
-            interaction.reply("Reproducción Pausada");
+            player?.pause();
+            interaction.reply("⏸️ Paused player");
             break;
         case "resume":
-            storage.getPlayer(interaction.guildId!!, interaction.channel!!)?.resume();
-            interaction.reply("Reproducción Continuada");
+            player?.resume();
+            interaction.reply("⏯️ Resuming player");
             break;
-    }
+        case "shuffle":
+            player?.shuffle();
+            interaction.reply("🔀 Shuffling playlist");
+            break;
+    } 
+}
+
+async function userIsInVoiceChannel(interaction: ChatInputCommandInteraction): Promise<boolean> {
+    return new Promise(async (resolve) => {
+        const voiceChannel = interaction.guild?.members.cache.get(interaction.user.id)?.voice.channel;
+
+        if (!voiceChannel) {
+            await interaction.reply('🚫 You have to be in a voice channel to use this command!');
+            resolve(false);
+        }
+        resolve(true);
+    });
 }
 
 async function playCommand(interaction: ChatInputCommandInteraction) {
-    const voiceChannel = interaction.guild?.members.cache.get(interaction.user.id)?.voice.channel;
 
-    if (!voiceChannel) {
-        await interaction.reply('¡Debes estar en un canal de voz para usar este comando!');
-        return;
-    }
+    if(!userIsInVoiceChannel(interaction)) return;
+
+    const voiceChannel = interaction.guild?.members.cache.get(interaction.user.id)?.voice.channel!!;
 
     const connection: VoiceConnection = joinVoiceChannel({
         channelId: voiceChannel.id,
@@ -63,13 +84,13 @@ async function playCommand(interaction: ChatInputCommandInteraction) {
     const youtubeUrl = interaction.options.getString("url");
 
     if (!player || !youtubeUrl) {
-        interaction.reply("funcion no implementada aún");
+        interaction.reply("❗ Internal Error");
         console.error('[ERROR] NULL_PLAYER || NULL_SONG_URL');
         return;
     }
 
     if (!youtubeUrl.startsWith('https://www.youtube.com')) {
-        interaction.reply('Sólo youtube se puede usar con este comando.');
+        interaction.reply('🚫 Only YouTube is available for this command.');
         console.error('[ERROR] INVALID_SERVICE_URL')
     }
 
@@ -79,7 +100,7 @@ async function playCommand(interaction: ChatInputCommandInteraction) {
 
     const song = await obtainSong(youtubeUrl);
     player.addSong(song);
-    interaction.followUp(`cancion añadida a la cola: ${song.title}`);
+    interaction.followUp(`✅ Added ${song.title} to the queue.`);
 }
 
 async function obtainSong(youtubeUrl: string): Promise<Song> {
@@ -92,7 +113,6 @@ async function obtainSong(youtubeUrl: string): Promise<Song> {
                 preferFreeFormats: true,
                 addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
                 format: 'bestaudio',
-                //getUrl: false,
                 extractAudio: true,
                 audioFormat: 'opus'
             });
@@ -108,10 +128,10 @@ async function obtainSong(youtubeUrl: string): Promise<Song> {
 
 }
 
-function tirarDados(numeroDados: number, numeroCaras: number) {
+function throwDice(diceNumber: number, sideNumber: number) {
     let total: number = 0;
-    for (let index = 0; index < numeroDados; index++) {
-        total += Math.round(Math.random() * numeroCaras + 1);
+    for (let index = 0; index < diceNumber; index++) {
+        total += Math.floor((Math.random() * sideNumber) + 1);
     }
     return total;
 }

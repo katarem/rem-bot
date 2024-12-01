@@ -1,7 +1,7 @@
 import { Client, IntentsBitField, userMention } from "discord.js";
 
 import { config } from "../config/config";
-import messageHandler from "./messageHandler";
+import messageHandler from "./message/messageHandler";
 import interactionHandler from "./interactionHandler";
 import DatabaseService from "./database";
 import { commandDeploy } from "./commandDeploy";
@@ -16,6 +16,7 @@ const bot = new Client({
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.GuildVoiceStates,
+        IntentsBitField.Flags.MessageContent
     ],
 });
 // conectamos con el token de la api de discordjs
@@ -41,6 +42,8 @@ bot.on("ready", async () => {
 //cuando envian mensaje
 bot.on("messageCreate", async (message) => {
     if(message.author.bot) return;
+    if(!bot.user) return;
+    if(!message.mentions.has(bot.user?.id)) return;
     let mensaje = await message.fetch();
     messageHandler(mensaje);
 });

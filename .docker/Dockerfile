@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22 AS dev
 
 # Instala FFmpeg
 RUN apt-get update && \
@@ -22,3 +22,23 @@ EXPOSE 3000
 
 # Comando para iniciar el bot
 CMD ["npm", "start"]
+
+FROM node:22 AS prod
+
+# Instala FFmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    apt-get clean
+
+# Crea un directorio de trabajo
+WORKDIR /app
+
+COPY . .
+# Instala las dependencias de tu bot
+RUN npm install
+
+# Expone el puerto (si es necesario)
+EXPOSE 3000
+
+# Comando para iniciar el bot
+CMD ["npm", "run","prod"]

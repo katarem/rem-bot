@@ -5,13 +5,13 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsnd --respawn --clear src/index.ts",
+    "prod": "tsc && node --env-file=production.env src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "katarem",
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "0.18.0",
-    "@tomhuel/jsonhandler": "1.0.0",
     "@types/node": "20.11.16",
     "discord.js": "14.14.1",
     "dotenv": "16.4.1",
